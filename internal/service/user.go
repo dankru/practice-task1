@@ -6,6 +6,7 @@ import (
 
 type UserRepository interface {
 	GetUsers() ([]domain.User, error)
+	CreateUser(user domain.User) error
 }
 
 type Service struct {
@@ -19,4 +20,9 @@ func NewService(repository UserRepository) *Service {
 func (s *Service) GetUsers() ([]domain.User, error) {
 	users, err := s.repository.GetUsers()
 	return users, err
+}
+
+func (s *Service) CreateUser(user domain.User) error {
+	err := s.repository.CreateUser(user)
+	return err
 }

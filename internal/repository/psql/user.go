@@ -3,6 +3,7 @@ package psql
 import (
 	"database/sql"
 	"github.com/dankru/practice-task1/internal/domain"
+	"time"
 )
 
 type Repository struct {
@@ -36,4 +37,9 @@ func (repo *Repository) GetUsers() ([]domain.User, error) {
 	}
 
 	return users, nil
+}
+
+func (repo *Repository) CreateUser(user domain.User) error {
+	_, err := repo.db.Exec("insert into users (name, email, password, registered_at) values ($1, $2, $3, $4)", user.Name, user.Email, user.Password, time.Now())
+	return err
 }
