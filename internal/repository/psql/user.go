@@ -14,7 +14,7 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (repo *Repository) GetUsers() ([]domain.User, error) {
+func (repo *Repository) GetAll() ([]domain.User, error) {
 	rows, err := repo.db.Query("select * from users")
 	if err != nil {
 		return nil, err
@@ -39,7 +39,17 @@ func (repo *Repository) GetUsers() ([]domain.User, error) {
 	return users, nil
 }
 
-func (repo *Repository) CreateUser(user domain.User) error {
+func (repo *Repository) Create(user domain.User) error {
 	_, err := repo.db.Exec("insert into users (name, email, password, registered_at) values ($1, $2, $3, $4)", user.Name, user.Email, user.Password, time.Now())
+	return err
+}
+
+func (repo *Repository) Update(id int64, user domain.User) error {
+	_, err := repo.db.Exec("update users set name = $1, email = $2, password = $3 WHERE id = $4", user.Name, user.Email, user.Password, id)
+	return err
+}
+
+func (repo *Repository) Delete(id int64) error {
+	_, err := repo.db.Exec("delete from users where id = $1", id)
 	return err
 }
