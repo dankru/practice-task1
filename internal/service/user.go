@@ -6,6 +6,7 @@ import (
 
 type UserRepository interface {
 	GetAll() ([]domain.User, error)
+	GetById(id int64) (domain.User, error)
 	Create(user domain.User) error
 	Update(id int64, user domain.User) error
 	Delete(id int64) error
@@ -22,6 +23,11 @@ func NewService(repository UserRepository) *Service {
 func (s *Service) GetAll() ([]domain.User, error) {
 	users, err := s.repository.GetAll()
 	return users, err
+}
+
+func (s *Service) GetById(id int64) (domain.User, error) {
+	user, err := s.repository.GetById(id)
+	return user, err
 }
 
 func (s *Service) Create(user domain.User) error {

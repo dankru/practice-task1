@@ -13,6 +13,7 @@ import (
 
 type UserService interface {
 	GetAll() ([]domain.User, error)
+	GetById(id int64) (domain.User, error)
 	Create(user domain.User) error
 	Update(id int64, user domain.User) error
 	Delete(id int64) error
@@ -37,6 +38,7 @@ func (h *Handler) initUserRoutes(router *mux.Router) {
 	{
 		users.HandleFunc("", h.getUsers).Methods(http.MethodGet)
 		users.HandleFunc("", h.createUser).Methods(http.MethodPost)
+		users.HandleFunc("/{id:[0-9]+}", h.getUserById).Methods(http.MethodGet)
 		users.HandleFunc("/{id:[0-9]+}", h.updateUser).Methods(http.MethodPut)
 		users.HandleFunc("/{id:[0-9]+}", h.deleteUser).Methods(http.MethodDelete)
 	}
@@ -55,6 +57,27 @@ func (h *Handler) getUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write([]byte(resp))
+}
+
+func (h *Handler) getUserById(w http.ResponseWriter, r *http.Request) {
+	id, err := getIdFromRequest(r)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.GetById(id)
+	if err != nil {
+		http.Error(w, "failed to find user", http.StatusInternalServerError)
+		return
+	}
+	response, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, "failed to marshall user", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(response)
 }
 
 func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {

@@ -39,6 +39,12 @@ func (repo *Repository) GetAll() ([]domain.User, error) {
 	return users, nil
 }
 
+func (repo *Repository) GetById(id int64) (domain.User, error) {
+	var u domain.User
+	err := repo.db.QueryRow("select * from users WHERE id = $1", id).Scan(&u.ID, &u.Name, &u.Email, &u.Password, &u.RegisteredAt)
+	return u, err
+}
+
 func (repo *Repository) Create(user domain.User) error {
 	_, err := repo.db.Exec("insert into users (name, email, password, registered_at) values ($1, $2, $3, $4)", user.Name, user.Email, user.Password, time.Now())
 	return err
