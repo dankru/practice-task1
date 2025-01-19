@@ -8,7 +8,8 @@ type UserRepository interface {
 	GetAll() ([]domain.User, error)
 	GetById(id int64) (domain.User, error)
 	Create(user domain.User) error
-	Update(id int64, user domain.User) error
+	Replace(id int64, user domain.User) error
+	Update(id int64, userInp domain.UpdateUserInput) error
 	Delete(id int64) error
 }
 
@@ -35,8 +36,13 @@ func (s *Service) Create(user domain.User) error {
 	return err
 }
 
-func (s *Service) Update(id int64, user domain.User) error {
-	err := s.repository.Update(id, user)
+func (s *Service) Replace(id int64, user domain.User) error {
+	err := s.repository.Replace(id, user)
+	return err
+}
+
+func (s *Service) Update(id int64, userInp domain.UpdateUserInput) error {
+	err := s.repository.Update(id, userInp)
 	return err
 }
 

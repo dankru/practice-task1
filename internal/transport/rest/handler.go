@@ -15,7 +15,8 @@ type UserService interface {
 	GetAll() ([]domain.User, error)
 	GetById(id int64) (domain.User, error)
 	Create(user domain.User) error
-	Update(id int64, user domain.User) error
+	Replace(id int64, user domain.User) error
+	Update(id int64, userInp domain.UpdateUserInput) error
 	Delete(id int64) error
 }
 
@@ -39,7 +40,8 @@ func (h *Handler) initUserRoutes(router *mux.Router) {
 		users.HandleFunc("", h.getUsers).Methods(http.MethodGet)
 		users.HandleFunc("", h.createUser).Methods(http.MethodPost)
 		users.HandleFunc("/{id:[0-9]+}", h.getUserById).Methods(http.MethodGet)
-		users.HandleFunc("/{id:[0-9]+}", h.updateUser).Methods(http.MethodPut)
+		users.HandleFunc("/{id:[0-9]+}", h.replaceUser).Methods(http.MethodPut)
+		users.HandleFunc("/{id:[0-9]+}", h.updateUser).Methods(http.MethodPatch)
 		users.HandleFunc("/{id:[0-9]+}", h.deleteUser).Methods(http.MethodDelete)
 	}
 }
@@ -102,7 +104,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) replaceUser(w http.ResponseWriter, r *http.Request) {
 	id, err := getIdFromRequest(r)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusBadRequest)
@@ -121,7 +123,32 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.Update(id, user); err != nil {
+	if err := h.service.Replace(id, user); err != nil {
+		http.Error(w, fmt.Sprintf("failed to update user: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
+	id, err := getIdFromRequest(r)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	reqBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	var userInp domain.UpdateUserInput
+	if err := json.Unmarshal(reqBytes, &userInp); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.Update(id, userInp); err != nil {
 		http.Error(w, fmt.Sprintf("failed to update user: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}

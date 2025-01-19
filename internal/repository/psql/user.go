@@ -2,7 +2,9 @@ package psql
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/dankru/practice-task1/internal/domain"
+	"strings"
 	"time"
 )
 
@@ -50,8 +52,42 @@ func (repo *Repository) Create(user domain.User) error {
 	return err
 }
 
-func (repo *Repository) Update(id int64, user domain.User) error {
+func (repo *Repository) Replace(id int64, user domain.User) error {
 	_, err := repo.db.Exec("update users set name = $1, email = $2, password = $3 WHERE id = $4", user.Name, user.Email, user.Password, id)
+	return err
+}
+
+func (repo *Repository) Update(id int64, userInp domain.UpdateUserInput) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if userInp.Name != nil {
+		setValues = append(setValues, fmt.Sprintf("name = $%d", argId))
+		args = append(args, *userInp.Name)
+		argId++
+	}
+
+	if userInp.Email != nil {
+		setValues = append(setValues, fmt.Sprintf("email = $%d", argId))
+		args = append(args, *userInp.Email)
+		argId++
+	}
+
+	if userInp.Password != nil {
+		setValues = append(setValues, fmt.Sprintf("password = $%d", argId))
+		args = append(args, *userInp.Password)
+		argId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf("update users set %s where id = $%d", setQuery, argId)
+
+	args = append(args, id)
+
+	_, err := repo.db.Exec(query, args...)
+
 	return err
 }
 
